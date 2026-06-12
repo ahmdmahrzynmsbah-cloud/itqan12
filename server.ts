@@ -6,7 +6,7 @@ import { Server as SocketIOServer } from "socket.io";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, initializeFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs } from "firebase/firestore";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs } from "firebase/firestore";
 
 // Extremely robust database configuration loader with multi-path resolution and static backups.
 // This completely bypasses fragile Node ES Module JSON import assertions that cause 500 crashes on Vercel.
@@ -69,16 +69,7 @@ const firebaseApp = getApps().length === 0
   ? initializeApp(firebaseConfig) 
   : getApp();
 
-// Initialize with experimentalForceLongPolling: true to ensure extremely robust connections under serverless functions/Vercel
-let db: any;
-try {
-  db = initializeFirestore(firebaseApp, {
-    experimentalForceLongPolling: true
-  }, firebaseConfig.firestoreDatabaseId);
-} catch (err) {
-  // Fallback to getFirestore if already initialized to bypass duplicate initialization exception
-  db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
-}
+const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
 
 // Interfaces
 interface TicketUpdate {
