@@ -4,9 +4,9 @@ import cors from "cors";
 import { createServer as createViteServer } from "vite";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
+import fs from "fs";
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs } from "firebase/firestore";
-import firebaseConfig from "./firebase-applet-config.json" assert { type: "json" };
+import { initializeFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs } from "firebase/firestore";
 
 const app = express();
 // Use port 3000 in cloud sandbox environments (like Google AI Studio / Cloud Run) to maintain external ingress connectivity.
@@ -21,8 +21,16 @@ const io = new SocketIOServer(httpServer, {
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
+// Load Firebase configuration dynamically to prevent issues with JSON imports under modern Node runtimes on Vercel
+const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
+const firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf-8"));
+
 const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+
+// Initialize with experimentalForceLongPolling: true to ensure extremely robust connections under serverless functions/Vercel
+const db = initializeFirestore(firebaseApp, {
+  experimentalForceLongPolling: true
+}, firebaseConfig.firestoreDatabaseId);
 
 // Interfaces
 interface TicketUpdate {
@@ -172,68 +180,67 @@ const DEFAULT_SETTINGS: SystemSettings = {
 
 let cachedTickets: Ticket[] = [];
 let cachedSettings: SystemSettings = DEFAULT_SETTINGS;
-
-// Initialize listeners
-onSnapshot(collection(db, "tickets"), (snapshot) => {
-  cachedTickets = snapshot.docs.map(d => d.data() as Ticket).sort((a,b) => {
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
-  io.emit("ticketsUpdated", cachedTickets);
-}, (error) => {
-  console.error("Firestore 'tickets' sync error (Rules might be deploying):", error.message);
-});
-
-onSnapshot(doc(db, "settings", "global"), (snapshot) => {
-  if (snapshot.exists()) {
-    const data = snapshot.data() as SystemSettings;
-    let mutated = false;
-    if (!data.categories) { data.categories = DEFAULT_CATEGORIES; mutated = true; }
-    if (!data.technicians) { data.technicians = DEFAULT_TECHNICIANS; mutated = true; }
-    cachedSettings = data;
-    if (mutated) {
-      setDoc(doc(db, "settings", "global"), cachedSettings).catch(console.error);
-    }
-  } else {
-    cachedSettings = DEFAULT_SETTINGS;
-    setDoc(doc(db, "settings", "global"), DEFAULT_SETTINGS).catch(console.error);
-  }
-  io.emit("settingsUpdated", cachedSettings);
-}, (error) => {
-  console.error("Firestore 'settings' sync error:", error.message);
-});
-
 let cachedContracts: Contract[] = [];
-
-onSnapshot(collection(db, "contracts"), (snapshot) => {
-  cachedContracts = snapshot.docs.map(d => d.data() as Contract).sort((a,b) => {
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
-  io.emit("contractsUpdated", cachedContracts);
-}, (error) => {
-  console.error("Firestore 'contracts' sync error:", error.message);
-});
-
 let cachedQuotations: Quotation[] = [];
-
-onSnapshot(collection(db, "quotations"), (snapshot) => {
-  cachedQuotations = snapshot.docs.map(d => d.data() as Quotation).sort((a,b) => {
-    return new Date(b.date).getTime() - new Date(a.date).getTime();
-  });
-  io.emit("quotationsUpdated", cachedQuotations);
-}, (error) => {
-  console.error("Firestore 'quotations' sync error:", error.message);
-});
-
 let cachedEmployees: Employee[] = [];
 
-onSnapshot(collection(db, "employees"), (snapshot) => {
-  cachedEmployees = snapshot.docs.map(d => d.data() as Employee).sort((a,b) => {
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+// Initialize listeners (Only if not running in Vercel Serverless environment to prevent connection leaks/timeouts)
+if (!process.env.VERCEL) {
+  onSnapshot(collection(db, "tickets"), (snapshot) => {
+    cachedTickets = snapshot.docs.map(d => d.data() as Ticket).sort((a,b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    io.emit("ticketsUpdated", cachedTickets);
+  }, (error) => {
+    console.error("Firestore 'tickets' sync error (Rules might be deploying):", error.message);
   });
-  io.emit("employeesUpdated", cachedEmployees);
-}, (error) => {
-  console.error("Firestore 'employees' sync error:", error.message);
-});
+
+  onSnapshot(doc(db, "settings", "global"), (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data() as SystemSettings;
+      let mutated = false;
+      if (!data.categories) { data.categories = DEFAULT_CATEGORIES; mutated = true; }
+      if (!data.technicians) { data.technicians = DEFAULT_TECHNICIANS; mutated = true; }
+      cachedSettings = data;
+      if (mutated) {
+        setDoc(doc(db, "settings", "global"), cachedSettings).catch(console.error);
+      }
+    } else {
+      cachedSettings = DEFAULT_SETTINGS;
+      setDoc(doc(db, "settings", "global"), DEFAULT_SETTINGS).catch(console.error);
+    }
+    io.emit("settingsUpdated", cachedSettings);
+  }, (error) => {
+    console.error("Firestore 'settings' sync error:", error.message);
+  });
+
+  onSnapshot(collection(db, "contracts"), (snapshot) => {
+    cachedContracts = snapshot.docs.map(d => d.data() as Contract).sort((a,b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    io.emit("contractsUpdated", cachedContracts);
+  }, (error) => {
+    console.error("Firestore 'contracts' sync error:", error.message);
+  });
+
+  onSnapshot(collection(db, "quotations"), (snapshot) => {
+    cachedQuotations = snapshot.docs.map(d => d.data() as Quotation).sort((a,b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+    io.emit("quotationsUpdated", cachedQuotations);
+  }, (error) => {
+    console.error("Firestore 'quotations' sync error:", error.message);
+  });
+
+  onSnapshot(collection(db, "employees"), (snapshot) => {
+    cachedEmployees = snapshot.docs.map(d => d.data() as Employee).sort((a,b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    io.emit("employeesUpdated", cachedEmployees);
+  }, (error) => {
+    console.error("Firestore 'employees' sync error:", error.message);
+  });
+}
 
 function readTickets(): Ticket[] { return cachedTickets; }
 function readContracts(): Contract[] { return cachedContracts; }
@@ -253,8 +260,13 @@ app.post("/api/auth/login", async (req, res) => {
     } else {
       res.status(401).json({ success: false, errorAr: "كلمة المرور غير صحيحة", errorEn: "Incorrect password" });
     }
-  } catch(e) {
-    res.status(500).json({ success: false });
+  } catch(e: any) {
+    console.error("Login database connection failure:", e);
+    res.status(500).json({ 
+      success: false, 
+      errorAr: `فشل الاتصال بقاعدة بيانات السحاب: ${e?.message || e}`, 
+      errorEn: `Cloud database connection failed: ${e?.message || e}`
+    });
   }
 });
 
