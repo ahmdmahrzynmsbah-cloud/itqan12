@@ -5,6 +5,7 @@ import { createServer as createViteServer } from "vite";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import fs from "fs";
+import { fileURLToPath } from "url";
 import { initializeApp } from "firebase/app";
 import { initializeFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs } from "firebase/firestore";
 
@@ -21,9 +22,49 @@ const io = new SocketIOServer(httpServer, {
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
-// Load Firebase configuration dynamically to prevent issues with JSON imports under modern Node runtimes on Vercel
-const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
-const firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf-8"));
+// Load Firebase configuration dynamically with multi-path resolution and secure fallback
+let firebaseConfig: any = null;
+try {
+  let derivedDirname = "";
+  try {
+    derivedDirname = path.dirname(fileURLToPath(import.meta.url));
+  } catch (_) {}
+
+  const pathsToTry = [
+    path.join(process.cwd(), "firebase-applet-config.json"),
+    path.join(process.cwd(), "..", "firebase-applet-config.json"),
+    path.join(derivedDirname, "firebase-applet-config.json"),
+    path.join(derivedDirname, "..", "firebase-applet-config.json")
+  ];
+
+  let loaded = false;
+  for (const p of pathsToTry) {
+    try {
+      if (fs.existsSync(p)) {
+        firebaseConfig = JSON.parse(fs.readFileSync(p, "utf-8"));
+        loaded = true;
+        break;
+      }
+    } catch (_) {}
+  }
+
+  if (!loaded) {
+    throw new Error("Could not find configuration in any of the checked paths.");
+  }
+} catch (err) {
+  console.warn("[Firebase Config] Failed loading via FS, applying serverless fallback parameters:", err);
+  // Ultimate hardcoded fallback for serverless hosting environments like Vercel where file assets might not be packaged
+  firebaseConfig = {
+    projectId: "gen-lang-client-0140690955",
+    appId: "1:999074803244:web:f33dd3e72442216c896b89",
+    apiKey: "AIzaSyC2eijCPOBU2DwDcOSSoGFMeQd6ttPsevQ",
+    authDomain: "gen-lang-client-0140690955.firebaseapp.com",
+    firestoreDatabaseId: "ai-studio-3b68020b-aa26-48ea-b6db-7544d7f449f6",
+    storageBucket: "gen-lang-client-0140690955.firebasestorage.app",
+    messagingSenderId: "999074803244",
+    measurementId: ""
+  };
+}
 
 const firebaseApp = initializeApp(firebaseConfig);
 
