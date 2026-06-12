@@ -12,10 +12,8 @@ import { getFirestore, initializeFirestore, collection, doc, setDoc, deleteDoc, 
 import { firebaseConfig } from "./src/firebase-config.js";
 
 const app = express();
-// Use port 3000 in cloud sandbox environments (like Google AI Studio / Cloud Run) to maintain external ingress connectivity.
-// On normal local development machines, fallback to port 3100 (or user-defined PORT env var) to prevent local conflicts as requested.
-const IS_CLOUD = !!(process.env.K_SERVICE || process.env.K_REVISION || process.env.CONTAINER_SANDBOX);
-const PORT = IS_CLOUD ? 3000 : (process.env.PORT ? parseInt(process.env.PORT, 10) : 3100);
+// Rely unconditionally on the platform-mandated port of 3000 for proper reverse proxy ingress
+const PORT = 3000;
 const httpServer = createServer(app);
 const io = new SocketIOServer(httpServer, {
   cors: { origin: "*" }
