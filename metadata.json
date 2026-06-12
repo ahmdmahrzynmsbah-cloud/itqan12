@@ -1,0 +1,6 @@
+{
+  "name": "إتقان - ITQAN Field Service Management",
+  "description": "نظام إتقان لإدارة الخدمات الميدانية والصيانة - ITQAN Field Service Management and Maintenance System",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

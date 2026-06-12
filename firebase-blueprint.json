@@ -1,0 +1,56 @@
+{
+  "firestore": {
+    "/tickets/{ticketId}": {
+      "schema": "Ticket",
+      "description": "Stores tickets"
+    },
+    "/settings/global": {
+       "schema": "Settings",
+       "description": "global config"
+    },
+    "/contracts/{contractId}": {
+      "schema": "Contract",
+      "description": "Stores operations maintenance contracts"
+    },
+    "/quotations/{quotationId}": {
+      "schema": "Quotation",
+      "description": "Stores customer price quotations"
+    },
+    "/employees/{employeeId}": {
+      "schema": "Employee",
+      "description": "Stores company employees and their documents/expirations"
+    }
+  },
+  "entities": {
+    "Ticket": {
+      "title": "Ticket",
+      "description": "Ticket",
+      "type": "object",
+      "properties": {}
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Settings",
+      "type": "object",
+      "properties": {}
+    },
+    "Contract": {
+      "title": "Contract",
+      "description": "Service Contract",
+      "type": "object",
+      "properties": {}
+    },
+    "Quotation": {
+      "title": "Quotation",
+      "description": "Price Quotation",
+      "type": "object",
+      "properties": {}
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "Employee profiles with document list and expirations",
+      "type": "object",
+      "properties": {}
+    }
+  }
+}
