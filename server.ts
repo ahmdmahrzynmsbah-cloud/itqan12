@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import cors from "cors";
-import { createServer as createViteServer } from "vite";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import fs from "fs";
@@ -9,7 +8,39 @@ import { fileURLToPath } from "url";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, initializeFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs } from "firebase/firestore";
 
-import firebaseConfig from "./firebase-applet-config.json";
+// Extremely robust database configuration loader with multi-path resolution and static backups.
+// This completely bypasses fragile Node ES Module JSON import assertions that cause 500 crashes on Vercel.
+let firebaseConfig: any;
+try {
+  const possiblePaths = [
+    path.join(process.cwd(), "firebase-applet-config.json"),
+    path.join(process.cwd(), "..", "firebase-applet-config.json"),
+    path.join(process.cwd(), "api", "firebase-applet-config.json")
+  ];
+  let found = false;
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      firebaseConfig = JSON.parse(fs.readFileSync(p, "utf-8"));
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    throw new Error("Filesystem scan yielded no config. Proceeding with static fallback.");
+  }
+} catch (err) {
+  console.warn("[Firebase loader] Safe fallback deployed:", err);
+  firebaseConfig = {
+    projectId: "gen-lang-client-0140690955",
+    appId: "1:999074803244:web:f33dd3e72442216c896b89",
+    apiKey: "AIzaSyC2eijCPOBU2DwDcOSSoGFMeQd6ttPsevQ",
+    authDomain: "gen-lang-client-0140690955.firebaseapp.com",
+    firestoreDatabaseId: "ai-studio-3b68020b-aa26-48ea-b6db-7544d7f449f6",
+    storageBucket: "gen-lang-client-0140690955.firebasestorage.app",
+    messagingSenderId: "999074803244",
+    measurementId: ""
+  };
+}
 
 const app = express();
 // Rely unconditionally on the platform-mandated port of 3000 for proper reverse proxy ingress
@@ -793,6 +824,7 @@ app.delete("/api/employees/:id", async (req, res) => {
 
 async function runServer() {
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa"
