@@ -9,10 +9,12 @@ import { fileURLToPath } from "url";
 import { initializeApp } from "firebase/app";
 import { getFirestore, initializeFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs } from "firebase/firestore";
 
+import { firebaseConfig } from "./src/firebase-config.js";
+
 const app = express();
 // Use port 3000 in cloud sandbox environments (like Google AI Studio / Cloud Run) to maintain external ingress connectivity.
 // On normal local development machines, fallback to port 3100 (or user-defined PORT env var) to prevent local conflicts as requested.
-const IS_CLOUD = !!(process.env.K_SERVICE || process.env.K_REVISION || process.env.AISTUDIO_APPLET || process.env.CONTAINER_SANDBOX);
+const IS_CLOUD = !!(process.env.K_SERVICE || process.env.K_REVISION || process.env.CONTAINER_SANDBOX);
 const PORT = IS_CLOUD ? 3000 : (process.env.PORT ? parseInt(process.env.PORT, 10) : 3100);
 const httpServer = createServer(app);
 const io = new SocketIOServer(httpServer, {
@@ -22,65 +24,24 @@ const io = new SocketIOServer(httpServer, {
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
-// Load Firebase configuration dynamically with multi-path resolution and secure fallback
-let firebaseConfig: any = null;
-try {
-  let derivedDirname = "";
-  try {
-    derivedDirname = path.dirname(fileURLToPath(import.meta.url));
-  } catch (_) {}
-
-  const pathsToTry = [
-    path.join(process.cwd(), "firebase-applet-config.json"),
-    path.join(process.cwd(), "..", "firebase-applet-config.json"),
-    path.join(derivedDirname, "firebase-applet-config.json"),
-    path.join(derivedDirname, "..", "firebase-applet-config.json")
-  ];
-
-  let loaded = false;
-  for (const p of pathsToTry) {
-    try {
-      if (fs.existsSync(p)) {
-        firebaseConfig = JSON.parse(fs.readFileSync(p, "utf-8"));
-        loaded = true;
-        break;
-      }
-    } catch (_) {}
+// Route ingress normalization for seamless Vercel Serverless routing
+app.use((req, res, next) => {
+  // Normalize URL paths on Vercel to bypass rewrite-induced 404s
+  if (req.originalUrl && req.originalUrl.startsWith("/api")) {
+    const originalPath = req.originalUrl.split("?")[0];
+    if (req.path !== originalPath) {
+      req.url = req.originalUrl;
+    }
   }
-
-  if (!loaded) {
-    throw new Error("Could not find configuration in any of the checked paths.");
-  }
-} catch (err) {
-  console.warn("[Firebase Config] Failed loading via FS, applying serverless fallback parameters:", err);
-  // Ultimate hardcoded fallback for serverless hosting environments like Vercel where file assets might not be packaged
-  firebaseConfig = {
-    projectId: "gen-lang-client-0140690955",
-    appId: "1:999074803244:web:f33dd3e72442216c896b89",
-    apiKey: "AIzaSyC2eijCPOBU2DwDcOSSoGFMeQd6ttPsevQ",
-    authDomain: "gen-lang-client-0140690955.firebaseapp.com",
-    firestoreDatabaseId: "ai-studio-3b68020b-aa26-48ea-b6db-7544d7f449f6",
-    storageBucket: "gen-lang-client-0140690955.firebasestorage.app",
-    messagingSenderId: "999074803244",
-    measurementId: ""
-  };
-}
+  next();
+});
 
 const firebaseApp = initializeApp(firebaseConfig);
 
-let db: any;
-try {
-  if (process.env.VERCEL) {
-    db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
-  } else {
-    db = initializeFirestore(firebaseApp, {
-      experimentalForceLongPolling: true
-    }, firebaseConfig.firestoreDatabaseId);
-  }
-} catch (dbErr) {
-  console.warn("[Firestore Init] Robust initialization failed, falling back to basic getFirestore:", dbErr);
-  db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
-}
+// Initialize with experimentalForceLongPolling: true to ensure extremely robust connections under serverless functions/Vercel
+const db = initializeFirestore(firebaseApp, {
+  experimentalForceLongPolling: true
+}, firebaseConfig.firestoreDatabaseId);
 
 // Interfaces
 interface TicketUpdate {
