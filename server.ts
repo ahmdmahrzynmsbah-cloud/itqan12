@@ -6,10 +6,10 @@ import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, initializeFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs } from "firebase/firestore";
 
-import { firebaseConfig } from "./src/firebase-config.js";
+import firebaseConfig from "./firebase-applet-config.json";
 
 const app = express();
 // Rely unconditionally on the platform-mandated port of 3000 for proper reverse proxy ingress
@@ -34,12 +34,20 @@ app.use((req, res, next) => {
   next();
 });
 
-const firebaseApp = initializeApp(firebaseConfig);
+const firebaseApp = getApps().length === 0 
+  ? initializeApp(firebaseConfig) 
+  : getApp();
 
 // Initialize with experimentalForceLongPolling: true to ensure extremely robust connections under serverless functions/Vercel
-const db = initializeFirestore(firebaseApp, {
-  experimentalForceLongPolling: true
-}, firebaseConfig.firestoreDatabaseId);
+let db: any;
+try {
+  db = initializeFirestore(firebaseApp, {
+    experimentalForceLongPolling: true
+  }, firebaseConfig.firestoreDatabaseId);
+} catch (err) {
+  // Fallback to getFirestore if already initialized to bypass duplicate initialization exception
+  db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+}
 
 // Interfaces
 interface TicketUpdate {
