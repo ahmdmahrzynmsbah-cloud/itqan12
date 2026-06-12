@@ -40,15 +40,24 @@ export default function AdminLogin({
         body: JSON.stringify({ password })
       });
 
-      const data = await res.json();
+      let data: any = {};
+      const text = await res.text();
+      try {
+        data = JSON.parse(text);
+      } catch (parseErr) {
+        throw new Error(`HTTP ${res.status}: Non-JSON payload. Context: ${text.slice(0, 120)}`);
+      }
+
       if (res.ok && data.success) {
         localStorage.setItem("itqan_admin_token", data.token);
         onLoginSuccess();
       } else {
-        setError(language === "ar" ? data.errorAr : data.errorEn);
+        setError(language === "ar" ? (data.errorAr || "خطأ غير معروف") : (data.errorEn || "Unknown error"));
       }
-    } catch (err) {
-      setError(language === "ar" ? "فشل الاتصال بالمخدم المركزي" : "Unable to reach database server");
+    } catch (err: any) {
+      setError(language === "ar" 
+        ? `فشل الاتصال بالمخدم المركزي (${err.message || err})` 
+        : `Unable to reach database server (${err.message || err})`);
     } finally {
       setLoading(false);
     }

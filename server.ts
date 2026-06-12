@@ -7,7 +7,7 @@ import { Server as SocketIOServer } from "socket.io";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { initializeApp } from "firebase/app";
-import { initializeFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs } from "firebase/firestore";
+import { getFirestore, initializeFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs } from "firebase/firestore";
 
 const app = express();
 // Use port 3000 in cloud sandbox environments (like Google AI Studio / Cloud Run) to maintain external ingress connectivity.
@@ -68,10 +68,19 @@ try {
 
 const firebaseApp = initializeApp(firebaseConfig);
 
-// Initialize with experimentalForceLongPolling: true to ensure extremely robust connections under serverless functions/Vercel
-const db = initializeFirestore(firebaseApp, {
-  experimentalForceLongPolling: true
-}, firebaseConfig.firestoreDatabaseId);
+let db: any;
+try {
+  if (process.env.VERCEL) {
+    db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+  } else {
+    db = initializeFirestore(firebaseApp, {
+      experimentalForceLongPolling: true
+    }, firebaseConfig.firestoreDatabaseId);
+  }
+} catch (dbErr) {
+  console.warn("[Firestore Init] Robust initialization failed, falling back to basic getFirestore:", dbErr);
+  db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+}
 
 // Interfaces
 interface TicketUpdate {
