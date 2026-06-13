@@ -142,6 +142,7 @@ interface Quotation {
   totalAmount: number;
   createdAt?: string;
   nextInvoiceDate?: string;
+  [key: string]: any;
 }
 
 interface EmployeeDocument {
@@ -643,17 +644,11 @@ app.get("/api/quotations", async (req, res) => {
 app.post("/api/quotations", async (req, res) => {
   try {
     const newQuote: Quotation = {
+      ...req.body,
       id: req.body.id || Date.now().toString(),
-      code: req.body.code,
+      code: req.body.code || `QT-${Date.now()}`,
       date: req.body.date || new Date().toISOString().split("T")[0],
-      requestedBy: req.body.requestedBy || "غير محدد",
-      status: req.body.status || "Pending",
-      approvalDetails: req.body.approvalDetails || "",
-      attachmentsCount: req.body.attachmentsCount || 0,
-      attachments: req.body.attachments || [],
-      totalAmount: Number(req.body.totalAmount) || 0,
-      createdAt: new Date().toISOString(),
-      nextInvoiceDate: req.body.nextInvoiceDate || ""
+      createdAt: new Date().toISOString()
     };
     await setDoc(doc(db, "quotations", newQuote.id), newQuote);
     res.status(201).json(newQuote);
