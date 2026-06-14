@@ -437,12 +437,13 @@ app.post("/api/tickets/:id/field-report", async (req, res) => {
     if (!snap.exists()) return res.status(404).json({ errorAr: "التذكرة غير موجودة", errorEn: "Ticket not found" });
     const ticket = snap.data() as Ticket;
 
-    const { completionNotes, beforeImage, afterImage, signature, gps, status, expenseCost } = req.body;
+    const { completionNotes, beforeImage, afterImage, photos, signature, gps, status, expenseCost } = req.body;
 
     ticket.fieldReport = {
       completionNotes: completionNotes || "تم الانتهاء من العمل الميداني وإرساله.",
       beforeImage: beforeImage || ticket.fieldReport?.beforeImage || null,
       afterImage: afterImage || ticket.fieldReport?.afterImage || null,
+      photos: photos || ticket.fieldReport?.photos || [],
       signature: signature || null,
       reportTimestamp: new Date().toISOString(),
       gps: gps || null

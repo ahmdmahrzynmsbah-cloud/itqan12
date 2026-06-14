@@ -24,6 +24,22 @@ interface Quotation {
   type?: string;
   brand?: string;
   requestType?: string;
+  
+  inspectionDate?: string;
+  inspectionDetailsText?: string;
+  inspectedBy?: string;
+  
+  quotationDate?: string;
+  quotationRefNo?: string;
+  quotationStatus?: string;
+  
+  invoiceNo?: string;
+  invoiceDate?: string;
+  
+  paymentDate?: string;
+  paymentRvNo?: string;
+  
+  ageDays?: string;
 }
 
 interface QuotationsModuleProps {
@@ -108,7 +124,18 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
       location: "",
       type: "",
       brand: "",
-      requestType: ""
+      requestType: "",
+      inspectionDate: "",
+      inspectionDetailsText: "",
+      inspectedBy: "",
+      quotationDate: "",
+      quotationRefNo: "",
+      quotationStatus: "",
+      invoiceNo: "",
+      invoiceDate: "",
+      paymentDate: "",
+      paymentRvNo: "",
+      ageDays: ""
     };
     
     setQuotations(prev => [...prev, newRow]);
@@ -125,7 +152,6 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
   };
 
   const deleteRow = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this row?")) return;
     setQuotations(prev => prev.filter(q => q.id !== id));
     try {
       await fetch(`/api/quotations/${id}`, { method: "DELETE" });
@@ -173,35 +199,73 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
         </div>
       </div>
 
-      <div className="bg-white border text-sm border-slate-300 rounded-xl shadow-sm overflow-hidden flex flex-col relative w-full">
-        <div className="overflow-x-auto w-full scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent" dir="ltr">
-          <table className="w-full text-left border-collapse" style={{ minWidth: "900px" }}>
+      <div className="bg-white border text-sm border-slate-300 rounded-xl shadow-sm overflow-hidden flex flex-col relative w-full mt-4">
+        <div className="overflow-x-auto w-full scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent pb-4" dir="ltr">
+          <table className="w-full text-left border-collapse" style={{ minWidth: "2400px" }}>
             <thead>
               {/* TOP HEADER ROW FOR GROUPING */}
-              <tr className="bg-[#2D6A76] text-white tracking-wider text-[11px] font-black border-b border-white border-opacity-20 text-center">
-                <th colSpan={4} className="border-r border-white border-opacity-20 py-1 shadow-sm">
+              <tr className="bg-[#2D6A76] text-white tracking-wider text-[13px] font-black border-b border-white border-opacity-20 text-center">
+                <th colSpan={5} className="border-r border-white border-opacity-20 py-2 shadow-sm">
                   {language === "ar" ? "تفاصيل العميل - Client Details" : "Client Details"}
                 </th>
-                <th colSpan={7} className="border-r border-white border-opacity-20 py-1 shadow-sm">
+                <th colSpan={6} className="border-r border-white border-opacity-20 py-2 shadow-sm bg-[#2D6A76]">
                   {language === "ar" ? "تفاصيل الاستفسار - Inquiry Details" : "Inquiry Details"}
                 </th>
-                <th className="py-1 w-10">{language === "ar" ? "الإجراء" : "Action"}</th>
+                <th colSpan={3} className="border-r border-white border-opacity-20 py-2 shadow-sm bg-[#0e4e5a]">
+                  {language === "ar" ? "تفاصيل المعاينة - Inspection Details" : "Inspection Details"}
+                </th>
+                <th colSpan={3} className="border-r border-white border-opacity-20 py-2 shadow-sm bg-[#b43f36]">
+                  {language === "ar" ? "عرض السعر - Quotation" : "Quotation"}
+                </th>
+                <th colSpan={2} className="border-r border-white border-opacity-20 py-2 shadow-sm bg-[#1e4c70]">
+                  {language === "ar" ? "الفاتورة - Invoice" : "Invoice"}
+                </th>
+                <th colSpan={2} className="border-r border-white border-opacity-20 py-2 shadow-sm bg-[#2b6a48]">
+                  {language === "ar" ? "الدفع - Payment" : "Payment"}
+                </th>
+                <th className="border-r border-white border-opacity-20 py-2 shadow-sm bg-[#8a2e2e]">
+                  {language === "ar" ? "عمر الوثيقة" : "Age"}
+                </th>
+                <th className="py-2 w-16">{language === "ar" ? "الإجراء" : "Action"}</th>
               </tr>
               {/* SECOND HEADER ROW FOR COLUMNS */}
-              <tr className="bg-[#3A8F9E] text-white tracking-wider text-[9px] font-bold whitespace-nowrap text-center">
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-6">Srl</th>
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-32">Company Name</th>
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-20">Requested by</th>
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-20">Contact</th>
+              <tr className="bg-[#3A8F9E] text-white tracking-wider text-[11px] font-bold whitespace-nowrap text-center">
+                <th className="border border-white border-opacity-20 px-2 py-2 w-12">Srl</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-56">Company Name</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-32">Requested by</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-32">Contact</th>
                 
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-16">Reference</th>
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-16">Date</th>
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-32">Property Name</th>
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-20">Location</th>
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-16">Type</th>
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-16">Brand</th>
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-24">Request Type</th>
-                <th className="border border-white border-opacity-20 px-0.5 py-1 w-10 text-center">Sync</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-28">Reference</th>
+                
+                <th className="border border-white border-opacity-20 px-2 py-2 w-32">Date</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-56">Property Name</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-32">Location</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-28">Type</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-28">Brand</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-40 border-r-2 border-r-slate-400">Request Type</th>
+                
+                {/* Inspection Details */}
+                <th className="border border-white border-opacity-20 px-2 py-2 w-32 bg-[#176a78]">Date</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-56 bg-[#176a78]">Details</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-40 bg-[#176a78] border-r-2 border-r-slate-400">Inspected by</th>
+                
+                {/* Quotation */}
+                <th className="border border-white border-opacity-20 px-2 py-2 w-32 bg-[#c54b41]">Date</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-40 bg-[#c54b41]">Ref. No.</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-32 bg-[#c54b41] border-r-2 border-r-slate-400">Status</th>
+                
+                {/* Invoice */}
+                <th className="border border-white border-opacity-20 px-2 py-2 w-40 bg-[#2b5e85]">Invoice No.</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-32 bg-[#2b5e85] border-r-2 border-r-slate-400">Date</th>
+                
+                {/* Payment */}
+                <th className="border border-white border-opacity-20 px-2 py-2 w-32 bg-[#3a855d]">Date</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-40 bg-[#3a855d] border-r-2 border-r-slate-400">RV No.</th>
+
+                {/* Age */}
+                <th className="border border-white border-opacity-20 px-2 py-2 w-24 bg-[#b33e3e]">Days</th>
+
+                <th className="border border-white border-opacity-20 px-2 py-2 w-16 text-center">Sync</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-300">
@@ -214,7 +278,7 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
                         value={q.srl || ""} 
                         onChange={(e) => handleCellChange(q.id, 'srl', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
-                        className="w-full h-full px-1 py-1.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400 text-center font-medium"
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400 text-center font-medium"
                       />
                     </td>
                     <td className="border border-slate-300 p-0">
@@ -223,7 +287,7 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
                         value={q.companyName || ""} 
                         onChange={(e) => handleCellChange(q.id, 'companyName', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
-                        className="w-full h-full px-1.5 py-1.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400 font-bold"
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400 font-bold"
                       />
                     </td>
                     <td className="border border-slate-300 p-0">
@@ -232,26 +296,26 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
                         value={q.requestedBy || ""} 
                         onChange={(e) => handleCellChange(q.id, 'requestedBy', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
-                        className="w-full h-full px-1.5 py-1.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
                       />
                     </td>
-                    <td className="border border-slate-300 p-0 border-r-2 border-r-slate-400">
+                    <td className="border border-slate-300 p-0">
                       <input 
                         type="text" 
                         value={q.contact || ""} 
                         onChange={(e) => handleCellChange(q.id, 'contact', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
-                        className="w-full h-full px-1.5 py-1.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
                       />
                     </td>
 
-                    <td className="border border-slate-300 p-0 bg-slate-50/50">
+                    <td className="border border-slate-300 p-0 bg-slate-50/50 border-r-2 border-r-slate-400">
                       <input 
                         type="text" 
                         value={q.reference || ""} 
                         onChange={(e) => handleCellChange(q.id, 'reference', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
-                        className="w-full h-full px-1.5 py-1.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400 font-mono text-[10px] font-bold text-slate-600"
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400 font-mono text-xs font-bold text-slate-600"
                       />
                     </td>
                     <td className="border border-slate-300 p-0">
@@ -260,7 +324,7 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
                         value={q.date || ""} 
                         onChange={(e) => handleCellChange(q.id, 'date', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
-                        className="w-full h-full px-1 py-1.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400 font-medium"
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400 font-medium"
                       />
                     </td>
                     <td className="border border-slate-300 p-0">
@@ -269,7 +333,7 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
                         value={q.propertyName || ""} 
                         onChange={(e) => handleCellChange(q.id, 'propertyName', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
-                        className="w-full h-full px-1.5 py-1.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400 font-bold"
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400 font-bold"
                       />
                     </td>
                     <td className="border border-slate-300 p-0">
@@ -278,7 +342,7 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
                         value={q.location || ""} 
                         onChange={(e) => handleCellChange(q.id, 'location', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
-                        className="w-full h-full px-1.5 py-1.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
                       />
                     </td>
                     <td className="border border-slate-300 p-0">
@@ -287,7 +351,7 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
                         value={q.type || ""} 
                         onChange={(e) => handleCellChange(q.id, 'type', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
-                        className="w-full h-full px-1.5 py-1.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
                       />
                     </td>
                     <td className="border border-slate-300 p-0">
@@ -296,18 +360,128 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
                         value={q.brand || ""} 
                         onChange={(e) => handleCellChange(q.id, 'brand', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
-                        className="w-full h-full px-1.5 py-1.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
                       />
                     </td>
-                    <td className="border border-slate-300 p-0">
+                    <td className="border border-slate-300 p-0 border-r-2 border-r-slate-400">
                       <input 
                         type="text" 
                         value={q.requestType || ""} 
                         onChange={(e) => handleCellChange(q.id, 'requestType', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
-                        className="w-full h-full px-1.5 py-1.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
                       />
                     </td>
+                    
+                    {/* Inspection Details */}
+                    <td className="border border-slate-300 p-0">
+                      <input 
+                        type="date" 
+                        value={q.inspectionDate || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'inspectionDate', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400 font-medium text-xs"
+                      />
+                    </td>
+                    <td className="border border-slate-300 p-0">
+                      <input 
+                        type="text" 
+                        value={q.inspectionDetailsText || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'inspectionDetailsText', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
+                      />
+                    </td>
+                    <td className="border border-slate-300 p-0 border-r-2 border-r-slate-400">
+                      <input 
+                        type="text" 
+                        value={q.inspectedBy || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'inspectedBy', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-yellow-50 focus:ring-1 focus:ring-blue-400"
+                      />
+                    </td>
+
+                    {/* Quotation */}
+                    <td className="border border-slate-300 p-0 bg-rose-50/20">
+                      <input 
+                        type="date" 
+                        value={q.quotationDate || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'quotationDate', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-rose-50 focus:ring-1 focus:ring-rose-400 font-medium text-xs"
+                      />
+                    </td>
+                    <td className="border border-slate-300 p-0 bg-rose-50/20">
+                      <input 
+                        type="text" 
+                        value={q.quotationRefNo || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'quotationRefNo', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-rose-50 focus:ring-1 focus:ring-rose-400 font-mono text-xs font-bold text-slate-800"
+                      />
+                    </td>
+                    <td className="border border-slate-300 p-0 bg-rose-50/20 border-r-2 border-r-slate-400">
+                      <input 
+                        type="text" 
+                        value={q.quotationStatus || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'quotationStatus', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-rose-50 focus:ring-1 focus:ring-rose-400 font-bold"
+                      />
+                    </td>
+
+                    {/* Invoice */}
+                    <td className="border border-slate-300 p-0 bg-blue-50/20">
+                      <input 
+                        type="text" 
+                        value={q.invoiceNo || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'invoiceNo', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-400 font-mono text-xs font-bold text-slate-800"
+                      />
+                    </td>
+                    <td className="border border-slate-300 p-0 bg-blue-50/20 border-r-2 border-r-slate-400">
+                      <input 
+                        type="date" 
+                        value={q.invoiceDate || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'invoiceDate', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-400 font-medium text-xs"
+                      />
+                    </td>
+
+                    {/* Payment */}
+                    <td className="border border-slate-300 p-0 bg-emerald-50/20">
+                      <input 
+                        type="date" 
+                        value={q.paymentDate || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'paymentDate', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-emerald-50 focus:ring-1 focus:ring-emerald-400 font-medium text-xs"
+                      />
+                    </td>
+                    <td className="border border-slate-300 p-0 bg-emerald-50/20 border-r-2 border-r-slate-400">
+                      <input 
+                        type="text" 
+                        value={q.paymentRvNo || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'paymentRvNo', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-emerald-50 focus:ring-1 focus:ring-emerald-400 font-mono text-xs font-bold text-slate-800"
+                      />
+                    </td>
+
+                    {/* Age */}
+                    <td className="border border-slate-300 p-0 bg-red-50/20">
+                      <input 
+                        type="text" 
+                        value={q.ageDays || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'ageDays', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-red-50 focus:ring-1 focus:ring-red-400 font-mono text-xs font-bold text-center text-red-700"
+                      />
+                    </td>
+
                     <td className="border border-slate-300 p-1 text-center bg-slate-50/50">
                       <div className="flex items-center justify-center gap-1">
                         {savingRows[q.id] ? (

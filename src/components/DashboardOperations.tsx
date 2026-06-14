@@ -454,15 +454,6 @@ export default function DashboardOperations({
                         <Eye className="w-3.5 h-3.5" />
                       </button>
 
-                      {/* Test directly in local simulator tab */}
-                      <button
-                        onClick={() => onOpenFieldPortalSimulator(ticket.id)}
-                        className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg transition-all cursor-pointer border border-amber-200"
-                        title={language === "ar" ? "بوابة الفني الميدانية" : "Simulate Mobile Form on main layout"}
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </button>
-
                       {/* Share link to technical field mobile */}
                       <button
                         onClick={() => handleCopyPortalLink(ticket.id)}
@@ -695,6 +686,24 @@ export default function DashboardOperations({
                       )}
                     </div>
                   </div>
+
+                  {/* Extra Photos */}
+                  {selectedTicket.fieldReport.photos && selectedTicket.fieldReport.photos.length > 0 && (
+                    <div className="space-y-1 mt-4">
+                      <span className="text-[10px] text-gray-400 block">{language === "ar" ? "صور إضافية" : "Additional Photos"}</span>
+                      <div className="grid grid-cols-3 gap-3">
+                        {selectedTicket.fieldReport.photos.map((photo, idx) => (
+                          <img 
+                            key={idx}
+                            src={photo} 
+                            alt={`Extra ${idx}`}
+                            referrerPolicy="no-referrer"
+                            className="w-full h-24 object-cover rounded-xl border border-gray-200 shadow-xs"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Material Expenditures */}
                   <div className="p-3.5 bg-purple-50 rounded-xl border border-purple-200 flex justify-between items-center text-xs">
@@ -1183,7 +1192,7 @@ export default function DashboardOperations({
               </div>
 
               {/* PHOTOS / IMAGES */}
-              {(invoiceTicket.fieldReport?.beforeImage || invoiceTicket.fieldReport?.afterImage) && (
+              {(invoiceTicket.fieldReport?.beforeImage || invoiceTicket.fieldReport?.afterImage || (invoiceTicket.fieldReport?.photos && invoiceTicket.fieldReport.photos.length > 0)) && (
                 <div className="mt-8 border-t border-gray-100 pt-6">
                   <h4 className="text-[10px] text-gray-400 font-bold uppercase mb-4 text-center">
                     {language === "ar" ? "التوثيق المرئي والأدلة الفنية" : "Visual Technical Documentation"}
@@ -1216,6 +1225,26 @@ export default function DashboardOperations({
                       </div>
                     )}
                   </div>
+
+                  {/* Extra Photos */}
+                  {invoiceTicket.fieldReport?.photos && invoiceTicket.fieldReport.photos.length > 0 && (
+                    <div className="mt-6">
+                      <span className="text-[9px] text-gray-500 font-semibold block text-center mb-2">
+                        {language === "ar" ? "صور إضافية" : "Additional Photos"}
+                      </span>
+                      <div className="grid grid-cols-4 gap-2">
+                        {invoiceTicket.fieldReport.photos.map((photo, idx) => (
+                          <img 
+                            key={idx}
+                            src={photo} 
+                            alt={`Extra ${idx}`}
+                            className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                            referrerPolicy="no-referrer" 
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

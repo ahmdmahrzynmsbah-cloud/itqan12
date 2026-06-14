@@ -8,6 +8,7 @@ export interface FieldReport {
   completionNotes: string;
   beforeImage: string | null; // base64 string
   afterImage: string | null;  // base64 string
+  photos?: string[];          // multiple photos
   signature: string | null;   // svg outline or base64 sign
   reportTimestamp: string | null;
   gps: { latitude: number; longitude: number } | null;

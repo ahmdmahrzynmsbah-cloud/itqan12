@@ -51,7 +51,6 @@ export default function Sidebar({
     { id: "operations", label: t.navOperations, icon: Users },
     { id: "contracts", label: t.navContracts, icon: Briefcase },
     { id: "employees", label: (t as any).navEmployees || "Staff & Docs", icon: UserCheck },
-    { id: "field-simulator", label: t.navFieldPreview, icon: Smartphone },
     { id: "quotations", label: t.navQuotations || "Quotations", icon: FileText },
     { id: "reports", label: t.navReports || "Reports", icon: FileText },
     { id: "activity-log", label: t.navActivityLog, icon: History },

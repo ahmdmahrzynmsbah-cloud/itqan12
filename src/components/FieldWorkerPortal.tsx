@@ -9,7 +9,8 @@ import {
   Clock, 
   Map, 
   Trash2, 
-  DollarSign
+  DollarSign,
+  Plus
 } from "lucide-react";
 import { translations } from "../utils/translations";
 import { Ticket } from "../types";
@@ -55,6 +56,7 @@ export default function FieldWorkerPortal({
   const [expenseCost, setExpenseCost] = useState<number>(0);
   const [beforeImage, setBeforeImage] = useState<string | null>(null);
   const [afterImage, setAfterImage] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [gpsData, setGpsData] = useState<{ latitude: number; longitude: number } | null>(null);
   const [gpsStatusText, setGpsStatusText] = useState("");
 
@@ -87,6 +89,7 @@ export default function FieldWorkerPortal({
     setExpenseCost(0);
     setBeforeImage(null);
     setAfterImage(null);
+    setPhotos([]);
     setGpsData(null);
 
     fetch(`/api/tickets/${ticketId}`)
@@ -101,6 +104,7 @@ export default function FieldWorkerPortal({
           setExpenseCost(data.expenseCost || 0);
           setBeforeImage(data.fieldReport.beforeImage || null);
           setAfterImage(data.fieldReport.afterImage || null);
+          setPhotos(data.fieldReport.photos || []);
           setGpsData(data.fieldReport.gps || null);
         }
       })
@@ -136,19 +140,49 @@ export default function FieldWorkerPortal({
   }, [ticket]);
 
   // Handle Photo uploading file conversions
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, target: "before" | "after") => {
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, target: "before" | "after" | "multiple") => {
+    const compressImage = (file: File, callback: (base64: string) => void) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          // Max dimension 800px
+          const maxDim = 800;
+          if (width > height && width > maxDim) {
+            height *= maxDim / width;
+            width = maxDim;
+          } else if (height > maxDim) {
+            width *= maxDim / height;
+            height = maxDim;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Compress to JSON-safe JPEG
+          callback(dataUrl);
+        };
+        if (event.target?.result) img.src = event.target.result as string;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    if (target === "multiple") {
+      const files = e.target.files;
+      if (!files) return;
+      Array.from(files).forEach(file => compressImage(file, (base64) => setPhotos(prev => [...prev, base64])));
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (target === "before") {
-        setBeforeImage(reader.result as string);
-      } else {
-        setAfterImage(reader.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    compressImage(file, (base64) => {
+      if (target === "before") setBeforeImage(base64);
+      else if (target === "after") setAfterImage(base64);
+    });
   };
 
   // Quick Preset buttons handler for rapid desk testing
@@ -249,6 +283,7 @@ export default function FieldWorkerPortal({
       completionNotes,
       beforeImage,
       afterImage,
+      photos,
       signature: signatureBase64,
       gps: gpsData,
       status: "In QA Review", // Transition ticket into quality check phase
@@ -451,6 +486,43 @@ export default function FieldWorkerPortal({
                       )}
                     </div>
                   </div>
+                </div>
+
+                {/* Multiple Extra Photos */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="block text-[10px] font-bold text-[#6B7280]">
+                      {language === "ar" ? "صور إضافية للمعاينات (عدد غير محدود)" : "Additional Photos (Unlimited)"}
+                    </label>
+                    <label className="cursor-pointer text-[9px] bg-blue-50 text-blue-600 px-2 py-1 rounded-md font-bold flex items-center gap-1 hover:bg-blue-100 transition-colors">
+                      <Plus className="w-3 h-3" />
+                      {language === "ar" ? "إضافة صور" : "Add Photos"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => handlePhotoUpload(e, "multiple")}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  
+                  {photos.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {photos.map((photo, idx) => (
+                        <div key={idx} className="border border-gray-200 rounded-lg relative h-24 bg-gray-50 overflow-hidden group shadow-sm z-0">
+                          <img src={photo} alt={`Extra ${idx}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setPhotos(prev => prev.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 p-1 bg-white/80 text-red-600 rounded-full hover:bg-white shadow-sm z-10"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Replacement expenditures - Hidden at user request */}

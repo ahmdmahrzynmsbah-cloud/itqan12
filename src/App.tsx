@@ -731,42 +731,6 @@ export default function App() {
               />
             )}
 
-            {activeTab === "field-simulator" && (
-              <div className="p-4 bg-white border border-[#E2E6ED] rounded-2xl shadow-xs space-y-4">
-                <div>
-                  <h2 className="text-sm font-bold text-[#111827] font-cairo">
-                    {language === "ar" ? "رابط ومحاكي بوابة الفني الميدانية" : "Field Specialist Smart Simulator"}
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {language === "ar"
-                      ? "يمكنك استخدام هذا المحاكي الداخلي لتجربة إدخال تقارير الصيانة والتواقيع وتغيير الحالات فورياً."
-                      : "Simulate real smartphone views to test Before/After uploads, completion files and customer signatures."}
-                  </p>
-                </div>
-
-                {/* Display full-height embedded mock */}
-                <div className="bg-[#F8F9FC] border border-[#E2E6ED] rounded-xl overflow-hidden p-3 max-w-md mx-auto">
-                  <div className="bg-gray-800 text-white rounded-t-3xl p-3 pb-1.5 flex justify-between items-center text-[10px] font-mono">
-                    <span>🔋 98%</span>
-                    <span className="font-bold">📱 ITQAN MOBILE MOCK</span>
-                    <span>📶 5G</span>
-                  </div>
-                  <div className="bg-white border-x border-b border-gray-300 rounded-b-3xl overflow-hidden h-[540px] overflow-y-auto">
-                    <FieldWorkerPortal
-                      language={language}
-                      ticketIdFromUrl={bypassTicketId}
-                      onRefreshAll={() => {
-                        fetch("/api/tickets")
-                          .then(res => res.json())
-                          .then(latest => setTickets(latest))
-                          .catch(err => console.error(err));
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
             {activeTab === "activity-log" && (
               <DashboardActivityLog
                 language={language}
