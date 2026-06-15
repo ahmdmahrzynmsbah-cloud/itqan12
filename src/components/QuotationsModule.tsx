@@ -40,6 +40,9 @@ interface Quotation {
   paymentRvNo?: string;
   
   ageDays?: string;
+
+  lpoNumber?: string;
+  lpoDate?: string;
 }
 
 interface QuotationsModuleProps {
@@ -135,7 +138,9 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
       invoiceDate: "",
       paymentDate: "",
       paymentRvNo: "",
-      ageDays: ""
+      ageDays: "",
+      lpoNumber: "",
+      lpoDate: ""
     };
     
     setQuotations(prev => [...prev, newRow]);
@@ -201,7 +206,7 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
 
       <div className="bg-white border text-sm border-slate-300 rounded-xl shadow-sm overflow-hidden flex flex-col relative w-full mt-4">
         <div className="overflow-x-auto w-full scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent pb-4" dir="ltr">
-          <table className="w-full text-left border-collapse" style={{ minWidth: "2400px" }}>
+          <table className="w-full text-left border-collapse" style={{ minWidth: "2600px" }}>
             <thead>
               {/* TOP HEADER ROW FOR GROUPING */}
               <tr className="bg-[#2D6A76] text-white tracking-wider text-[13px] font-black border-b border-white border-opacity-20 text-center">
@@ -225,6 +230,9 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
                 </th>
                 <th className="border-r border-white border-opacity-20 py-2 shadow-sm bg-[#8a2e2e]">
                   {language === "ar" ? "عمر الوثيقة" : "Age"}
+                </th>
+                <th colSpan={2} className="border-r border-white border-opacity-20 py-2 shadow-sm bg-[#683f8f]">
+                  {language === "ar" ? "تأكيد أمر الشراء" : "LPO Confirmation"}
                 </th>
                 <th className="py-2 w-16">{language === "ar" ? "الإجراء" : "Action"}</th>
               </tr>
@@ -263,7 +271,11 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
                 <th className="border border-white border-opacity-20 px-2 py-2 w-40 bg-[#3a855d] border-r-2 border-r-slate-400">RV No.</th>
 
                 {/* Age */}
-                <th className="border border-white border-opacity-20 px-2 py-2 w-24 bg-[#b33e3e]">Days</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-24 bg-[#b33e3e] border-r-2 border-r-slate-400">Days</th>
+                
+                {/* LPO Confirmation */}
+                <th className="border border-white border-opacity-20 px-2 py-2 w-40 bg-[#8c5ebb]">LPO Number</th>
+                <th className="border border-white border-opacity-20 px-2 py-2 w-32 bg-[#8c5ebb]">LPO Date</th>
 
                 <th className="border border-white border-opacity-20 px-2 py-2 w-16 text-center">Sync</th>
               </tr>
@@ -472,13 +484,33 @@ export default function QuotationsModule({ language }: QuotationsModuleProps) {
                     </td>
 
                     {/* Age */}
-                    <td className="border border-slate-300 p-0 bg-red-50/20">
+                    <td className="border border-slate-300 p-0 bg-red-50/20 border-r-2 border-r-slate-400">
                       <input 
                         type="text" 
                         value={q.ageDays || ""} 
                         onChange={(e) => handleCellChange(q.id, 'ageDays', e.target.value)}
                         onBlur={() => saveRowToDb(q)}
                         className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-red-50 focus:ring-1 focus:ring-red-400 font-mono text-xs font-bold text-center text-red-700"
+                      />
+                    </td>
+
+                    {/* LPO Confirmation */}
+                    <td className="border border-slate-300 p-0 bg-purple-50/20">
+                      <input 
+                        type="text" 
+                        value={q.lpoNumber || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'lpoNumber', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-purple-50 focus:ring-1 focus:ring-purple-400 font-mono text-xs font-bold text-slate-800"
+                      />
+                    </td>
+                    <td className="border border-slate-300 p-0 bg-purple-50/20 text-xs">
+                      <input 
+                        type="date" 
+                        value={q.lpoDate || ""} 
+                        onChange={(e) => handleCellChange(q.id, 'lpoDate', e.target.value)}
+                        onBlur={() => saveRowToDb(q)}
+                        className="w-full h-full px-2 py-2.5 bg-transparent outline-none focus:bg-purple-50 focus:ring-1 focus:ring-purple-400 font-medium"
                       />
                     </td>
 
